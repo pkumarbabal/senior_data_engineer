@@ -60,10 +60,18 @@ if 'stage_state_covid' not in tables:
 url=r'https://hooks.slack.com/services/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'
 hex_number = random.randint(1118481, 16777215)
 hex_number = str(hex(hex_number))
-mycursor.execute('select monyear,state,cases  from stage_state_covid order by cases desc limit 3')
-message='Total No. of cases month wise :- \n'
+mycursor.execute('select sum(deaths) from stage_state_covid')
 for i in mycursor:
-  message+='Month/Year :- '+ str(i[0]) +'    |    ' + 'State :-  '+ i[1]+'   |      Total Cases :- '+str(i[2])+'\n'
+    total_death=int(i[0])
+mycursor.execute('select monyear from stage_state_covid group by monyear')
+mon_list=[]
+for i in mycursor:
+    mon_list.append(i[0])
+for i in mon_list:
+    message='Total No. of deaths month wise Top 3:- \n'
+    mycursor.execute(f'select state,sum(deaths) sum_death from stage_state_covid where monyear = \'{i}\' group by state order by sum_death desc limit 3')
+    for j in mycursor:
+        message+='\nMonth/Year :- '+ i +'\n' + 'State :-  '+ j[0]+'\nTotal Deaths in state :- '+str(j[1])+'\n% of death from total deaths of US  :- '+str((int(j[1])/total_death)*100)+'\n---------------------'
 slack_data={
         "attachments": [
             {
